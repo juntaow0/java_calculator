@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-class Calculator implements ActionListener{
+class Calculator{
     JFrame frame;
     JTextField textfield;
     JButton[] numberBtns = new JButton[10];
@@ -87,58 +87,46 @@ class Calculator implements ActionListener{
         functionBtns[9] = clearEntry;
 
         for (var btn:functionBtns){
-            btn.addActionListener(this);
             btn.setFont(myFont);
             btn.setFocusable(false);
             btn.setMargin(new Insets(0,0,0,0));
         }
+        assignFunctionBtnListeners();
 
         for (int i=0;i<10;i++){
             var btn = new JButton(String.valueOf(i));
-            btn.addActionListener(this);
+            final int number = i;
+            btn.addActionListener((e)->{
+                textfield.setText(textfield.getText().concat(String.valueOf(number)));
+            });
             btn.setFont(myFont);
             btn.setFocusable(false);
             numberBtns[i] = btn;
         }
     }
 
-    Calculator(){
-        createButtons();
-        setUpPanel();
-        setUpFrame(); 
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e){
-        for (var btn:numberBtns){
-            if (e.getSource()==btn){
-                textfield.setText(textfield.getText().concat(btn.getText()));
-            }
-        }
-        if (e.getSource()==decimal){
-            textfield.setText(textfield.getText().concat("."));
-        }
-        if (e.getSource()==addition){
+    void assignFunctionBtnListeners(){
+        addition.addActionListener((e)->{
             num1 = Double.parseDouble(textfield.getText());
             operator = '+';
             textfield.setText("");
-        }
-        if (e.getSource()==subtraction){
+        });
+        subtraction.addActionListener((e)->{
             num1 = Double.parseDouble(textfield.getText());
             operator = '-';
             textfield.setText("");
-        }
-        if (e.getSource()==mult){
+        });
+        mult.addActionListener((e)->{
             num1 = Double.parseDouble(textfield.getText());
             operator = '*';
             textfield.setText("");
-        }
-        if (e.getSource()==divide){
+        });
+        divide.addActionListener((e)->{
             num1 = Double.parseDouble(textfield.getText());
             operator = '/';
             textfield.setText("");
-        }
-        if (e.getSource()==equal){
+        });
+        equal.addActionListener((e)->{
             num2 = Double.parseDouble(textfield.getText());
             switch(operator){
                 case '+':
@@ -155,23 +143,32 @@ class Calculator implements ActionListener{
             }
             textfield.setText(String.valueOf(result));
             num1=result;
-        }
-        if (e.getSource()==clear){
+        });
+        clear.addActionListener((e)->{
             textfield.setText("");
-        }
-        if (e.getSource()==clearEntry){
-            textfield.setText("");
-        }
-        if (e.getSource()==backspace){
+        });
+        backspace.addActionListener((e)->{
             String temp = textfield.getText();
             temp = temp.substring(0, temp.length()-1);
             textfield.setText(temp);
-        }
-        if (e.getSource()==sign){
+        });
+        sign.addActionListener((e)->{
             double temp = Double.parseDouble(textfield.getText());
             temp*=-1;
             textfield.setText(String.valueOf(temp));
-        }
+        });
+        decimal.addActionListener((e)->{
+            textfield.setText(textfield.getText().concat("."));
+        });
+        clearEntry.addActionListener((e)->{
+            textfield.setText("");
+        });
+    }
+
+    Calculator(){
+        createButtons();
+        setUpPanel();
+        setUpFrame(); 
     }
 }
 
