@@ -17,6 +17,8 @@ class Calculator{
     char operator;
     boolean assignNumber = true;
     boolean numMissing = true;
+    boolean divideByZero = false;
+    int inputSize=1;
     final int BTNWIDTH = 60;
     final int BTNHEIGHT = 50;
     final int BTNGAP = 8;
@@ -32,7 +34,7 @@ class Calculator{
         textfield.setFont(myFont);
         textfield.setEditable(false);
         textfield.setHorizontalAlignment(SwingConstants.RIGHT);
-        textfield.setText(String.valueOf(num1));
+        textfield.setText(removeUselessDigits(String.valueOf(num1)));
         frame.add(panel);
         frame.add(textfield);
         frame.setVisible(true);
@@ -107,13 +109,31 @@ class Calculator{
                     textfield.setText("");
                     assignNumber = false;
                     numMissing = false;
+                    inputSize = 0;
                 }
-                textfield.setText(textfield.getText().concat(String.valueOf(number)));
+                if (inputSize<=20){
+                    textfield.setText(textfield.getText().concat(String.valueOf(number)));
+                    inputSize++;
+                }
             });
             btn.setFont(myFont);
             btn.setFocusable(false);
             numberBtns[i] = btn;
         }
+    }
+
+    void UpdateInputSize(){
+        inputSize = textfield.getText().length();
+    }
+
+    String removeUselessDigits(String display){
+        double value = Double.parseDouble(display);
+        int intVal = (int)value;
+        if (intVal!=value){
+            return display;
+        }
+        UpdateInputSize();
+        return String.valueOf(intVal);
     }
 
     void assignFunctionBtnListeners(){
@@ -151,29 +171,30 @@ class Calculator{
             operator = '/';
         });
         equal.addActionListener((e)->{
-            System.out.println("assgin: "+assignNumber+" numMissing: "+numMissing);
+            //System.out.println("assgin: "+assignNumber+" numMissing: "+numMissing);
             if (numStack.empty()){
-                if (assignNumber && numMissing){
-                    System.out.println("case 1");
-                }else if (!numMissing){
-                    System.out.println("case 2");
+                if (!numMissing){
+                    // repreat previous calculation
+                    //System.out.println("case 1");
                     num1 = Double.parseDouble(textfield.getText());
                 }
             }
             else{
                 num1 = numStack.pop();
                 if (assignNumber && numMissing){
-                    System.out.println("case 3");
+                    // one number with one operator only: num1 op= num2
+                    //System.out.println("case 2");
                     num2 = num1;
                     numMissing =false;
                 }else if (!assignNumber){
-                    System.out.println("case 4");
+                    // normal usage: num1+num2=result
+                    //System.out.println("case 3");
                     num2 = Double.parseDouble(textfield.getText());
                 }
             }
 
-            System.out.println("num1: "+num1);
-            System.out.println("num2: "+num2);
+            //System.out.println("num1: "+num1);
+            //System.out.println("num2: "+num2);
             
             switch(operator){
                 case '+':
@@ -186,13 +207,28 @@ class Calculator{
                     result = num1*num2;
                     break;
                 case '/':
-                    result = num1/num2;
+                    if (num2==0){
+                        divideByZero = true;
+                        result = 0;
+                    }else{
+                        result = num1/num2;
+                    }
                     break;
                 default:
-                    result = num2;
+                    result = num1;
             }
-            textfield.setText(String.valueOf(result));
-            //numStack.push(result);
+            if (divideByZero){
+                divideByZero = false;
+                textfield.setText("Divide by zero!");
+                num1 = 0;
+                num2 = 0;
+                numMissing = true;
+                operator = ' ';
+                numStack.clear();
+            }else{
+                textfield.setText(removeUselessDigits(String.valueOf(result)));
+            }
+            UpdateInputSize();
             assignNumber = true;
         });
         clear.addActionListener((e)->{
@@ -203,22 +239,40 @@ class Calculator{
             assignNumber = true;
             numMissing = true;
             operator = ' ';
+            numStack.clear();
+            UpdateInputSize();
         });
         backspace.addActionListener((e)->{
             String temp = textfield.getText();
-            temp = temp.substring(0, temp.length()-1);
+            int n = temp.length();
+            if (n>1){
+                temp = temp.substring(0, temp.length()-1);
+            }else{
+                temp = "0";
+                assignNumber = true;
+            }
             textfield.setText(temp);
+            UpdateInputSize();
         });
         sign.addActionListener((e)->{
             double temp = Double.parseDouble(textfield.getText());
             temp*=-1;
             textfield.setText(String.valueOf(temp));
+            UpdateInputSize();
         });
         decimal.addActionListener((e)->{
-            textfield.setText(textfield.getText().concat("."));
+            String temp = textfield.getText();
+            if (!temp.contains(".")){
+                textfield.setText(temp.concat("."));
+                assignNumber=false;
+                numMissing = false;
+                UpdateInputSize();
+            }
         });
         clearEntry.addActionListener((e)->{
-            textfield.setText("");
+            textfield.setText("0");
+            assignNumber = true;
+            UpdateInputSize();
         });
     }
 
