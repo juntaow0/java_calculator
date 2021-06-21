@@ -1,6 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.util.*;
 
 class Calculator{
     JFrame frame;
@@ -12,8 +12,11 @@ class Calculator{
     JButton sign, decimal;
     JPanel panel;
     Font myFont = new Font("Monospaced", Font.BOLD,22);
+    Stack<Double> numStack;
     double num1 = 0, num2=0, result = 0;
     char operator;
+    boolean assignNumber = true;
+    boolean numMissing = true;
     final int BTNWIDTH = 60;
     final int BTNHEIGHT = 50;
     final int BTNGAP = 8;
@@ -23,10 +26,13 @@ class Calculator{
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(3*BTNGAP+4*BTNWIDTH+24,4*BTNGAP+6*BTNHEIGHT+50+4);
         frame.setLayout(null);
+        frame.setResizable(false);
         textfield = new JTextField();
         textfield.setBounds(4, 4, 3*BTNGAP+4*BTNWIDTH, 50);
         textfield.setFont(myFont);
         textfield.setEditable(false);
+        textfield.setHorizontalAlignment(SwingConstants.RIGHT);
+        textfield.setText(String.valueOf(num1));
         frame.add(panel);
         frame.add(textfield);
         frame.setVisible(true);
@@ -97,6 +103,11 @@ class Calculator{
             var btn = new JButton(String.valueOf(i));
             final int number = i;
             btn.addActionListener((e)->{
+                if (assignNumber){
+                    textfield.setText("");
+                    assignNumber = false;
+                    numMissing = false;
+                }
                 textfield.setText(textfield.getText().concat(String.valueOf(number)));
             });
             btn.setFont(myFont);
@@ -107,27 +118,63 @@ class Calculator{
 
     void assignFunctionBtnListeners(){
         addition.addActionListener((e)->{
-            num1 = Double.parseDouble(textfield.getText());
+            if (!numMissing){
+                numStack.push(Double.parseDouble(textfield.getText()));
+                assignNumber = true;
+                numMissing = true;
+            }
             operator = '+';
-            textfield.setText("");
         });
         subtraction.addActionListener((e)->{
-            num1 = Double.parseDouble(textfield.getText());
+            if (!numMissing){
+                numStack.push(Double.parseDouble(textfield.getText()));
+                assignNumber = true;
+                numMissing = true;
+            }
             operator = '-';
-            textfield.setText("");
         });
         mult.addActionListener((e)->{
-            num1 = Double.parseDouble(textfield.getText());
+            if (!numMissing){
+                numStack.push(Double.parseDouble(textfield.getText()));
+                assignNumber = true;
+                numMissing = true;
+            }
             operator = '*';
-            textfield.setText("");
+
         });
         divide.addActionListener((e)->{
-            num1 = Double.parseDouble(textfield.getText());
+            if (!numMissing){
+                numStack.push(Double.parseDouble(textfield.getText()));
+                assignNumber = true;
+                numMissing = true;
+            }
             operator = '/';
-            textfield.setText("");
         });
         equal.addActionListener((e)->{
-            num2 = Double.parseDouble(textfield.getText());
+            System.out.println("assgin: "+assignNumber+" numMissing: "+numMissing);
+            if (numStack.empty()){
+                if (assignNumber && numMissing){
+                    System.out.println("case 1");
+                }else if (!numMissing){
+                    System.out.println("case 2");
+                    num1 = Double.parseDouble(textfield.getText());
+                }
+            }
+            else{
+                num1 = numStack.pop();
+                if (assignNumber && numMissing){
+                    System.out.println("case 3");
+                    num2 = num1;
+                    numMissing =false;
+                }else if (!assignNumber){
+                    System.out.println("case 4");
+                    num2 = Double.parseDouble(textfield.getText());
+                }
+            }
+
+            System.out.println("num1: "+num1);
+            System.out.println("num2: "+num2);
+            
             switch(operator){
                 case '+':
                     result = num1+num2;
@@ -140,12 +187,22 @@ class Calculator{
                     break;
                 case '/':
                     result = num1/num2;
+                    break;
+                default:
+                    result = num2;
             }
             textfield.setText(String.valueOf(result));
-            num1=result;
+            //numStack.push(result);
+            assignNumber = true;
         });
         clear.addActionListener((e)->{
-            textfield.setText("");
+            textfield.setText("0");
+            num1 = 0;
+            num2 = 0;
+            result = 0;
+            assignNumber = true;
+            numMissing = true;
+            operator = ' ';
         });
         backspace.addActionListener((e)->{
             String temp = textfield.getText();
@@ -166,6 +223,7 @@ class Calculator{
     }
 
     Calculator(){
+        numStack = new Stack<>();
         createButtons();
         setUpPanel();
         setUpFrame(); 
